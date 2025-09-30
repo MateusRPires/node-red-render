@@ -4,14 +4,20 @@ const RED = require("node-red");
 const server = http.createServer();
 
 const settings = {
-  httpAdminRoot: "/",          // Editor acessível na raiz da URL
-  httpNodeRoot: "/api",        // Endpoints dos fluxos
-  userDir: "./.nodered/",      // Diretório de dados
-  functionGlobalContext: {}    // Contexto global
+  // Editor do Node-RED na raiz
+  httpAdminRoot: "/",
+  // Endpoints HTTP expostos pelos flows
+  httpNodeRoot: "/api",
+  // Use a raiz do repositório como diretório de dados/projeto:
+  userDir: "./",
+  // Mantém a mesma chave entre restarts/deploys (defina no Render > Environment)
+  credentialSecret: process.env.CREDENTIAL_SECRET || undefined,
+  functionGlobalContext: {}
 };
 
 RED.init(server, settings);
 
+// O Render define a porta em process.env.PORT
 server.listen(process.env.PORT || 3000);
 
 RED.start();

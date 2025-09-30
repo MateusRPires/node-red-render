@@ -3,7 +3,7 @@
     "id": "1",
     "type": "inject",
     "z": "0",
-    "name": "Hello Render",
+    "name": "Hello Render (persistente via Git)",
     "props": [],
     "repeat": "",
     "crontab": "",
