@@ -1,7 +1,7 @@
 {
   "name": "node-red-render",
-  "version": "1.2.0",
-  "description": "Node-RED rodando no Render Free Tier com Projects habilitado + credentialSecret",
+  "version": "1.3.0",
+  "description": "Node-RED rodando no Render Free Tier com Projects habilitado e flowFile fixo",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

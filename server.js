@@ -7,11 +7,12 @@ const settings = {
   httpAdminRoot: "/",
   httpNodeRoot: "/api",
   userDir: "./",
+  flowFile: "flows.json",   // força nome fixo para os flows
   credentialSecret: process.env.CREDENTIAL_SECRET || undefined,
   functionGlobalContext: {},
   editorTheme: {
     projects: {
-      enabled: true   // Habilita Projects no menu
+      enabled: true   // habilita Projects no menu
     }
   }
 };

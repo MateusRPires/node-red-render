@@ -1,4 +1,4 @@
-# Node-RED no Render (Free) com Projects habilitado
+# Node-RED no Render (Free) com Projects habilitado e flowFile fixo
 
 1) Faça deploy deste repo no Render como **Web Service**.
 2) Em **Settings > Environment**, crie a variável `CREDENTIAL_SECRET` com um valor forte.
