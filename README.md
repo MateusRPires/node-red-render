@@ -1,6 +1,5 @@
-# Node-RED no Render (Free) com Projects habilitado e flowFile fixo
+# Node-RED no Render (Free) - Bind 0.0.0.0
 
-1) Faça deploy deste repo no Render como **Web Service**.
-2) Em **Settings > Environment**, crie a variável `CREDENTIAL_SECRET` com um valor forte.
-3) No editor do Node-RED, vá em **Menu > Settings > Projects** e ative.
-4) Conecte ao seu repositório GitHub para salvar os flows de forma persistente.
+- server.listen(PORT, '0.0.0.0')
+- Projects habilitado e flowFile fixo.
+- Defina CREDENTIAL_SECRET nas variáveis de ambiente do Render.

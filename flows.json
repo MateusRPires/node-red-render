@@ -1,25 +1,7 @@
 [
-  {
-    "id": "1",
-    "type": "inject",
-    "z": "0",
-    "name": "Hello Render (Projects final)",
-    "props": [],
-    "repeat": "",
-    "crontab": "",
-    "once": true,
-    "wires": [["2"]]
-  },
-  {
-    "id": "2",
-    "type": "debug",
-    "z": "0",
-    "name": "Output",
-    "active": true,
-    "tosidebar": true,
-    "console": false,
-    "tostatus": false,
-    "complete": "true",
-    "wires": []
-  }
+  { "id": "1", "type": "inject", "z": "0", "name": "Hello Render (bind 0.0.0.0)",
+    "props": [], "repeat": "", "crontab": "", "once": true, "wires": [["2"]] },
+  { "id": "2", "type": "debug", "z": "0", "name": "Output",
+    "active": true, "tosidebar": true, "console": false, "tostatus": false,
+    "complete": "true", "wires": [] }
 ]
