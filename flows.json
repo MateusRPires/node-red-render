@@ -1,1 +1,474 @@
-[{"id":"6060e5b2d290ca34","type":"tab","label":"Fluxo 1","disabled":false,"info":"","env":[]},{"id":"tls-hivemq","type":"tls-config","name":"TLS HiveMQ","cert":"","key":"","ca":"","servername":"${MQTT_HOST}","verifyservercert":true},{"id":"hivemq","type":"mqtt-broker","name":"HiveMQ Cloud","broker":"c2716a54cc6e48e6a9863c1b6fc39fef.s1.eu.hivemq.cloud","port":"${MQTT_PORT}","tls":"tls-hivemq","clientid":"","autoConnect":true,"usetls":true,"protocolVersion":"4","keepalive":"60","cleansession":true,"autoUnsubscribe":true,"birthTopic":"","birthQos":"0","birthRetain":"false","birthPayload":"","birthMsg":{},"closeTopic":"","closeQos":"0","closeRetain":"false","closePayload":"","closeMsg":{},"willTopic":"","willQos":"0","willRetain":"false","willPayload":"","willMsg":{},"userProps":"","sessionExpiry":""},{"id":"mqtt-in","type":"mqtt in","z":"6060e5b2d290ca34","name":"Sub HiveMQ","topic":"weg/softstarter/run","qos":"1","datatype":"auto","broker":"hivemq","nl":false,"rap":true,"rh":0,"inputs":0,"x":170,"y":300,"wires":[["dbg-raw","sw-01"]]},{"id":"dbg-raw","type":"debug","z":"6060e5b2d290ca34","name":"MQTT bruto (payload)","active":true,"tosidebar":true,"console":false,"tostatus":true,"complete":"payload","targetType":"msg","x":300,"y":200,"wires":[]},{"id":"sw-01","type":"switch","z":"6060e5b2d290ca34","name":"0 / 1 / outros","property":"payload","propertyType":"msg","rules":[{"t":"eq","v":"0","vt":"str"},{"t":"eq","v":"1","vt":"str"},{"t":"else"}],"checkall":"true","repair":false,"outputs":3,"x":350,"y":300,"wires":[["chg-off"],["chg-on"],["dbg-outros"]]},{"id":"chg-off","type":"change","z":"6060e5b2d290ca34","name":"payload = \"Motor desligado\"","rules":[{"t":"set","p":"payload","pt":"msg","to":"Motor desligado","tot":"str"}],"x":580,"y":260,"wires":[["rbe-state","1bcc820dc2a9e1f4"]]},{"id":"chg-on","type":"change","z":"6060e5b2d290ca34","name":"payload = \"Motor ligado\"","rules":[{"t":"set","p":"payload","pt":"msg","to":"Motor ligado","tot":"str"}],"x":576,"y":300,"wires":[["rbe-state","ae0c2d98886ef44d"]]},{"id":"rbe-state","type":"rbe","z":"6060e5b2d290ca34","name":"Só quando mudar","func":"rbe","gap":"","start":"","inout":"out","septopics":true,"property":"payload","x":830,"y":200,"wires":[["delay-rl"]]},{"id":"delay-rl","type":"delay","z":"6060e5b2d290ca34","name":"Rate limit 1/5s","pauseType":"rate","timeout":"5","timeoutUnits":"seconds","rate":"1","nbRateUnits":"5","rateUnits":"second","randomFirst":"1","randomLast":"5","randomUnits":"seconds","drop":false,"outputs":1,"x":1140,"y":280,"wires":[["chg-env"]]},{"id":"chg-env","type":"change","z":"6060e5b2d290ca34","name":"Ler ENV do Render","rules":[{"t":"set","p":"phone","pt":"msg","to":"$env(\"CALLMEBOT_PHONE\")","tot":"jsonata"},{"t":"set","p":"apikey","pt":"msg","to":"$env(\"CALLMEBOT_APIKEY\")","tot":"jsonata"}],"x":1330,"y":280,"wires":[["fn-url","dbg-env","09d461ef695a9787"]]},{"id":"dbg-env","type":"debug","z":"6060e5b2d290ca34","name":"ENV lidas (mascarado)","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"{phone: phone, apikey_ok: $length(apikey)>0}","targetType":"jsonata","statusVal":"","statusType":"auto","x":1570,"y":180,"wires":[]},{"id":"fn-url","type":"function","z":"6060e5b2d290ca34","name":"Montar URL CallMeBot (+headers)","func":"const phone = msg.phone;\nconst apikey = msg.apikey;\n\nif (!phone || !apikey) {\n  node.error('CALLMEBOT_PHONE e/ou CALLMEBOT_APIKEY não definidos no Environment do Render.', msg);\n  return null;\n}\n\n// Texto + timestamp (opcional)\nconst ts = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nconst text = ${String(msg.payload)} (${ts});\n\nconst base = 'https://api.callmebot.com/whatsapp.php';\nconst query = phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(apikey)};\n\nmsg.url = ${base}?${query};\n\n// headers estilo navegador para evitar 403\nmsg.headers = {\n  \"User-Agent\": \"Mozilla/5.0\",\n  \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8\",\n  \"Referer\": \"https://api.callmebot.com/\"\n};\n\nreturn msg;\n","outputs":1,"timeout":"","noerr":27,"initialize":"","finalize":"","libs":[],"x":1620,"y":280,"wires":[["dbg-url","http-callme"]]},{"id":"dbg-url","type":"debug","z":"6060e5b2d290ca34","name":"URL enviada ao CallMeBot","active":true,"tosidebar":true,"console":false,"tostatus":true,"complete":"url","targetType":"msg","x":1800,"y":400,"wires":[]},{"id":"http-callme","type":"http request","z":"6060e5b2d290ca34","name":"HTTP GET → CallMeBot","method":"GET","ret":"txt","paytoqs":"ignore","url":"","tls":"","persist":false,"proxy":"","insecureHTTPParser":false,"authType":"","senderr":false,"headers":[],"x":1890,"y":220,"wires":[["dbg-resp"]]},{"id":"dbg-resp","type":"debug","z":"6060e5b2d290ca34","name":"Resposta CallMeBot","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","x":2060,"y":300,"wires":[]},{"id":"dbg-outros","type":"debug","z":"6060e5b2d290ca34","name":"MQTT (não 0/1)","active":true,"tosidebar":true,"console":false,"tostatus":true,"complete":"true","targetType":"full","x":560,"y":360,"wires":[]},{"id":"dae92857c5bec750","type":"inject","z":"6060e5b2d290ca34","name":"0","props":[{"p":"payload"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"0","payloadType":"str","x":150,"y":400,"wires":[["db557e2e7d1f79ed"]]},{"id":"6c163e8908a3eb1e","type":"inject","z":"6060e5b2d290ca34","name":"1","props":[{"p":"payload"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"1","payloadType":"str","x":150,"y":440,"wires":[["db557e2e7d1f79ed"]]},{"id":"db557e2e7d1f79ed","type":"mqtt out","z":"6060e5b2d290ca34","name":"","topic":"weg/softstarter/run","qos":"","retain":"","respTopic":"","contentType":"","userProps":"","correl":"","expiry":"","broker":"hivemq","x":370,"y":420,"wires":[]},{"id":"1bcc820dc2a9e1f4","type":"debug","z":"6060e5b2d290ca34","name":"Motor ligado","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","statusVal":"","statusType":"auto","x":890,"y":380,"wires":[]},{"id":"ae0c2d98886ef44d","type":"debug","z":"6060e5b2d290ca34","name":"Motor desligado","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","statusVal":"","statusType":"auto","x":900,"y":440,"wires":[]},{"id":"09d461ef695a9787","type":"debug","z":"6060e5b2d290ca34","name":"phone","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"phone","targetType":"msg","statusVal":"","statusType":"auto","x":1550,"y":340,"wires":[]}]
+[
+    {
+        "id": "6060e5b2d290ca34",
+        "type": "tab",
+        "label": "Fluxo 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "tls-hivemq",
+        "type": "tls-config",
+        "name": "TLS HiveMQ",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "servername": "${MQTT_HOST}",
+        "verifyservercert": true
+    },
+    {
+        "id": "hivemq",
+        "type": "mqtt-broker",
+        "name": "HiveMQ Cloud",
+        "broker": "c2716a54cc6e48e6a9863c1b6fc39fef.s1.eu.hivemq.cloud",
+        "port": "${MQTT_PORT}",
+        "tls": "tls-hivemq",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": true,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "mqtt-in",
+        "type": "mqtt in",
+        "z": "6060e5b2d290ca34",
+        "name": "Sub HiveMQ",
+        "topic": "weg/softstarter/run",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "hivemq",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 300,
+        "wires": [
+            [
+                "dbg-raw",
+                "sw-01"
+            ]
+        ]
+    },
+    {
+        "id": "dbg-raw",
+        "type": "debug",
+        "z": "6060e5b2d290ca34",
+        "name": "MQTT bruto (payload)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 300,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "sw-01",
+        "type": "switch",
+        "z": "6060e5b2d290ca34",
+        "name": "0 / 1 / outros",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 350,
+        "y": 300,
+        "wires": [
+            [
+                "chg-off"
+            ],
+            [
+                "chg-on"
+            ],
+            [
+                "dbg-outros"
+            ]
+        ]
+    },
+    {
+        "id": "chg-off",
+        "type": "change",
+        "z": "6060e5b2d290ca34",
+        "name": "payload = \"Motor desligado\"",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Motor desligado",
+                "tot": "str"
+            }
+        ],
+        "x": 580,
+        "y": 260,
+        "wires": [
+            [
+                "rbe-state",
+                "1bcc820dc2a9e1f4"
+            ]
+        ]
+    },
+    {
+        "id": "chg-on",
+        "type": "change",
+        "z": "6060e5b2d290ca34",
+        "name": "payload = \"Motor ligado\"",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "Motor ligado",
+                "tot": "str"
+            }
+        ],
+        "x": 576,
+        "y": 300,
+        "wires": [
+            [
+                "rbe-state",
+                "ae0c2d98886ef44d"
+            ]
+        ]
+    },
+    {
+        "id": "rbe-state",
+        "type": "rbe",
+        "z": "6060e5b2d290ca34",
+        "name": "Só quando mudar",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": true,
+        "property": "payload",
+        "x": 830,
+        "y": 200,
+        "wires": [
+            [
+                "delay-rl"
+            ]
+        ]
+    },
+    {
+        "id": "delay-rl",
+        "type": "delay",
+        "z": "6060e5b2d290ca34",
+        "name": "Rate limit 1/5s",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "5",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "outputs": 1,
+        "x": 1140,
+        "y": 280,
+        "wires": [
+            [
+                "chg-env"
+            ]
+        ]
+    },
+    {
+        "id": "chg-env",
+        "type": "change",
+        "z": "6060e5b2d290ca34",
+        "name": "Ler ENV do Render",
+        "rules": [
+            {
+                "t": "set",
+                "p": "phone",
+                "pt": "msg",
+                "to": "$env(\"CALLMEBOT_PHONE\")",
+                "tot": "jsonata"
+            },
+            {
+                "t": "set",
+                "p": "apikey",
+                "pt": "msg",
+                "to": "$env(\"CALLMEBOT_APIKEY\")",
+                "tot": "jsonata"
+            }
+        ],
+        "x": 1330,
+        "y": 280,
+        "wires": [
+            [
+                "fn-url",
+                "dbg-env",
+                "09d461ef695a9787"
+            ]
+        ]
+    },
+    {
+        "id": "dbg-env",
+        "type": "debug",
+        "z": "6060e5b2d290ca34",
+        "name": "ENV lidas (mascarado)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "{phone: phone, apikey_ok: $length(apikey)>0}",
+        "targetType": "jsonata",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1570,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "fn-url",
+        "type": "function",
+        "z": "6060e5b2d290ca34",
+        "name": "Montar URL CallMeBot (+headers)",
+        "func": "const phone = msg.phone;\nconst apikey = msg.apikey;\n\nif (!phone || !apikey) {\n  node.error('CALLMEBOT_PHONE e/ou CALLMEBOT_APIKEY não definidos no Environment do Render.', msg);\n  return null;\n}\n\n// Texto + timestamp (opcional)\nconst ts = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\nconst text = ${String(msg.payload)} (${ts});\n\nconst base = 'https://api.callmebot.com/whatsapp.php';\nconst query = phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(apikey)};\n\nmsg.url = ${base}?${query};\n\n// headers estilo navegador para evitar 403\nmsg.headers = {\n  \"User-Agent\": \"Mozilla/5.0\",\n  \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,/;q=0.8\",\n  \"Referer\": \"https://api.callmebot.com/\"\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 27,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1620,
+        "y": 280,
+        "wires": [
+            [
+                "dbg-url",
+                "http-callme"
+            ]
+        ]
+    },
+    {
+        "id": "dbg-url",
+        "type": "debug",
+        "z": "6060e5b2d290ca34",
+        "name": "URL enviada ao CallMeBot",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "url",
+        "targetType": "msg",
+        "x": 1800,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "http-callme",
+        "type": "http request",
+        "z": "6060e5b2d290ca34",
+        "name": "HTTP GET → CallMeBot",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1890,
+        "y": 220,
+        "wires": [
+            [
+                "dbg-resp"
+            ]
+        ]
+    },
+    {
+        "id": "dbg-resp",
+        "type": "debug",
+        "z": "6060e5b2d290ca34",
+        "name": "Resposta CallMeBot",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 2060,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "dbg-outros",
+        "type": "debug",
+        "z": "6060e5b2d290ca34",
+        "name": "MQTT (não 0/1)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": true,
+        "complete": "true",
+        "targetType": "full",
+        "x": 560,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "dae92857c5bec750",
+        "type": "inject",
+        "z": "6060e5b2d290ca34",
+        "name": "0",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "str",
+        "x": 150,
+        "y": 400,
+        "wires": [
+            [
+                "db557e2e7d1f79ed"
+            ]
+        ]
+    },
+    {
+        "id": "6c163e8908a3eb1e",
+        "type": "inject",
+        "z": "6060e5b2d290ca34",
+        "name": "1",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "str",
+        "x": 150,
+        "y": 440,
+        "wires": [
+            [
+                "db557e2e7d1f79ed"
+            ]
+        ]
+    },
+    {
+        "id": "db557e2e7d1f79ed",
+        "type": "mqtt out",
+        "z": "6060e5b2d290ca34",
+        "name": "",
+        "topic": "weg/softstarter/run",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "hivemq",
+        "x": 370,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "1bcc820dc2a9e1f4",
+        "type": "debug",
+        "z": "6060e5b2d290ca34",
+        "name": "Motor ligado",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 890,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "ae0c2d98886ef44d",
+        "type": "debug",
+        "z": "6060e5b2d290ca34",
+        "name": "Motor desligado",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "09d461ef695a9787",
+        "type": "debug",
+        "z": "6060e5b2d290ca34",
+        "name": "phone",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "phone",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1550,
+        "y": 340,
+        "wires": []
+    }
+]
