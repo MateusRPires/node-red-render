@@ -54,7 +54,7 @@
         "type": "mqtt in",
         "z": "6060e5b2d290ca34",
         "name": "Sub HiveMQ",
-        "topic": "weg/softstarter/run",
+        "topic": "${MQTT_TOPIC}",
         "qos": "1",
         "datatype": "auto",
         "broker": "hivemq",
